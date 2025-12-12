@@ -373,17 +373,10 @@ jobs:
                [ ${{ inputs.sub_level }} -lt 136 ]; }; then
             cp ../../zzh_patch/5.10-patch/fdinfo.c.patch ./
             patch -p1 < fdinfo.c.patch
-            cp ../../zzh_patch/5.10-patch/array.c.patch ./
-            patch -p1 < array.c.patch
-            cp ../../zzh_patch/5.10-patch/base.c.patch ./
-            patch -p1 < base.c.patch
-            cp ../../zzh_patch/5.10-patch/task_mmu.c.patch ./
-            patch -p1 < task_mmu.c.patch
           fi
 
           if grep -q deprecated <<< "$REMOTE_BRANCH" && \
-             { [ "$FORMATTED_BRANCH" == "android12-5.10" ] && \
-               [ ${{ inputs.sub_level }} -lt 209 ]; }; then
+             { [ "$FORMATTED_BRANCH" == "android12-5.10" ] }; then
             cp ../../zzh_patch/5.10-patch/array.c.patch ./
             patch -p1 < array.c.patch
             echo "patch -p1 < array.c.patch"
