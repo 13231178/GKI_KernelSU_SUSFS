@@ -376,25 +376,28 @@ jobs:
           fi
 
 
-          #if grep -q deprecated <<< "$REMOTE_BRANCH" && [ "$FORMATTED_BRANCH" == "android12-5.10" ]; then
-          #  cp ../../zzh_patch/5.10-patch/array.c.patch ./
-          #  patch -p1 < array.c.patch
-          #  echo "patch -p1 < array.c.patch"
-          #  cp ../../zzh_patch/5.10-patch/base.c.patch ./
-          #  patch -p1 < base.c.patch
-          #  echo "patch -p1 < base.c.patch"
-          #  cp ../../zzh_patch/5.10-patch/task_mmu.c.patch ./
-          #  patch -p1 < task_mmu.c.patch
-          #  echo "patch -p1 < task_mmu.c.patch"
-          #fi
+          if grep -q deprecated <<< "$REMOTE_BRANCH" && [ "$FORMATTED_BRANCH" == "android12-5.10" ]; then
+            echo "patch -p1 < array.c.patch"
+            cp ../../zzh_patch/5.10-patch/array.c.patch ./
+            patch -p1 < array.c.patch
+
+            echo "patch -p1 < base.c.patch"
+            cp ../../zzh_patch/5.10-patch/base.c.patch ./
+            patch -p1 < base.c.patch
+
+            echo "patch -p1 < task_mmu.c.patch"
+            cp ../../zzh_patch/5.10-patch/task_mmu.c.patch ./
+            patch -p1 < task_mmu.c.patch
+            
+          fi
       # 步骤2：【关键】启动交互式调试（tmate）
-      - name: 启动交互式连接
-        uses: mxschmitt/action-tmate@v3  # 最新稳定版
-        with:
-          # 可选配置（按需添加）
-          limit-access-to-actor: false  # 仅允许触发工作流的用户连接（安全）
-          # ssh-key: ${{ secrets.SSH_PUBLIC_KEY }}  # 可选：添加你的 SSH 公钥，免密码登录
-          # timeout-minutes: 15  # 超时时间（默认 15 分钟，无操作自动断开）
+      #- name: 启动交互式连接
+      #  uses: mxschmitt/action-tmate@v3  # 最新稳定版
+      #  with:
+      #    # 可选配置（按需添加）
+      #    limit-access-to-actor: false  # 仅允许触发工作流的用户连接（安全）
+      #    # ssh-key: ${{ secrets.SSH_PUBLIC_KEY }}  # 可选：添加你的 SSH 公钥，免密码登录
+      #    # timeout-minutes: 15  # 超时时间（默认 15 分钟，无操作自动断开）
       - name: 一些修复补丁
         run: |
           cd "$CONFIG/common"
