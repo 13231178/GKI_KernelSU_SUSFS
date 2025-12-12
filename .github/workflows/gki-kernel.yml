@@ -375,6 +375,10 @@ jobs:
             patch -p1 < fdinfo.c.patch
           fi
 
+          ls -l ../../zzh_patch/  # 查看是否有 zzh_patch 目录
+          ls -l ../../zzh_patch/5.10-patch/  # 查看是否有 5.10-patch 目录
+          ls -l ../../zzh_patch/5.10-patch/array.c.patch  # 查看目标文件是否存在
+          
           if grep -q deprecated <<< "$REMOTE_BRANCH" && [ "$FORMATTED_BRANCH" == "android12-5.10" ]; then
             cp ../../zzh_patch/5.10-patch/array.c.patch ./
             patch -p1 < array.c.patch
