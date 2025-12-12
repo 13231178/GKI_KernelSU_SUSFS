@@ -3,9 +3,9 @@ index 9d316d57c..761c390ff 100644
 --- a/fs/proc/task_mmu.c
 +++ b/fs/proc/task_mmu.c
 @@ -316,7 +316,16 @@ static void show_vma_header_prefix(struct seq_file *m,
- 	seq_put_decimal_ull(m, " ", ino);
- 	seq_putc(m, ' ');
- }
+#include <asm/tlb.h>
+#include <asm/tlbflush.h>
+#include "internal.h"
 -
 +static int
 +kkk(const char *aaa,const char *bbb)
@@ -17,9 +17,7 @@ index 9d316d57c..761c390ff 100644
 +	}
 +	return 0;
 +}
- static void
- show_map_vma(struct seq_file *m, struct vm_area_struct *vma)
- {
+#define SEQ_PUT_DEC(str, val)
 @@ -329,6 +338,8 @@ show_map_vma(struct seq_file *m, struct vm_area_struct *vma)
  	dev_t dev = 0;
  	const char *name = NULL;
