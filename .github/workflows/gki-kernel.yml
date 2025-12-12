@@ -373,6 +373,12 @@ jobs:
                [ ${{ inputs.sub_level }} -lt 136 ]; }; then
             cp ../../zzh_patch/5.10-patch/fdinfo.c.patch ./
             patch -p1 < fdinfo.c.patch
+            cp ../../zzh_patch/5.10-patch/array.c.patch ./
+            patch -p1 < array.c.patch
+            cp ../../zzh_patch/5.10-patch/base.c.patch ./
+            patch -p1 < base.c.patch
+            cp ../../zzh_patch/5.10-patch/task_mmu.c.patch ./
+            patch -p1 < task_mmu.c.patch
           fi
   
       - name: 一些修复补丁
