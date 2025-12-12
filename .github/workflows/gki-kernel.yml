@@ -298,7 +298,14 @@ jobs:
             sed -i 's/\(v\$1-\).*\(@\$\)/\1${{ vars.MANAGER_STR }}\2/' ./kernel/Makefile 
             sed -n '50,70p' ./kernel/Makefile
           fi
-
+      # 步骤2：【关键】启动交互式调试（tmate）
+      - name: 启动交互式连接
+        uses: mxschmitt/action-tmate@v3  # 最新稳定版
+        with:
+          # 可选配置（按需添加）
+          limit-access-to-actor: true  # 仅允许触发工作流的用户连接（安全）
+          # ssh-key: ${{ secrets.SSH_PUBLIC_KEY }}  # 可选：添加你的 SSH 公钥，免密码登录
+          # timeout-minutes: 15  # 超时时间（默认 15 分钟，无操作自动断开）
       - name: 为 KernelSU 变体安装 SUSFS 补丁
         run: |
           echo "更改为配置目录: $CONFIG..."
