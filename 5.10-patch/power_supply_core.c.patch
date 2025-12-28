@@ -1,0 +1,49 @@
+diff --git a/drivers/power/supply/power_supply_core.c b/drivers/power/supply/power_supply_core.c
+index bd49ae732..e989b12d7 100644
+--- a/drivers/power/supply/power_supply_core.c
++++ b/drivers/power/supply/power_supply_core.c
+@@ -85,9 +85,44 @@ static void power_supply_changed_work(struct work_struct *work)
+ 	unsigned long flags;
+ 	struct power_supply *psy = container_of(work, struct power_supply,
+ 						changed_work);
++// 新增：充电自动开机相关变量定义
++	enum power_supply_property prop;
++	int ret;
++	bool is_charging_online = false;
++	bool is_system_running = false;
+ 
+ 	dev_dbg(&psy->dev, "%s\n", __func__);
+ 
++	// ===================== 新增：充电自动开机核心逻辑（开始） =====================
++	// 步骤1：仅筛选 USB/AC 充电类型，避免其他电源类型误触发
++	if (psy->type == POWER_SUPPLY_TYPE_USB || psy->type == POWER_SUPPLY_TYPE_AC) {
++		// 步骤2：获取充电接入状态（POWER_SUPPLY_PROP_ONLINE 标识是否有外部电源输入）
++		prop = POWER_SUPPLY_PROP_ONLINE;
++		ret = power_supply_get_property(psy, prop, &is_charging_online);
++		if (ret < 0) {
++			pr_warn("[Charge Auto Power On] %s: failed to get online status, ret=%d\n",
++				psy->name, ret);
++		} else {
++			// 步骤3：判断系统是否处于关机状态（避免开机后重复触发）
++			// system_state 是内核全局变量，SYSTEM_RUNNING 表示已开机
++			is_system_running = (system_state == SYSTEM_RUNNING);
++
++			// 步骤4：满足「关机状态 + 充电接入」，触发自动开机
++			if (!is_system_running && is_charging_online) {
++				pr_info("[Charge Auto Power On] Detected %s charge inserted, triggering auto power on...\n",
++					(psy->type == POWER_SUPPLY_TYPE_AC) ? "AC" : "USB");
++
++				// 方式1：内核标准开机接口（通用性强，推荐优先使用）
++				kernel_restart(NULL);
++
++				// 方式2：平台专用开机接口（若 kernel_restart 不适用，注释上方，启用下方并适配）
++				// platform_trigger_power_on(); // 需自行实现平台硬件逻辑
++			}
++		}
++	}
++	// ===================== 新增：充电自动开机核心逻辑（结束） =====================
++
++
+ 	spin_lock_irqsave(&psy->changed_lock, flags);
+ 	/*
+ 	 * Check 'changed' here to avoid issues due to race between
