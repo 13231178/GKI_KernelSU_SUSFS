@@ -1,7 +1,7 @@
-diff --git a/common/drivers/power/supply/power_supply_core.c b/common/drivers/power/supply/power_supply_core.c
+diff --git a/drivers/power/supply/power_supply_core.c b/drivers/power/supply/power_supply_core.c
 index bd49ae732..c74800dba 100644
---- a/common/drivers/power/supply/power_supply_core.c
-+++ b/common/drivers/power/supply/power_supply_core.c
+--- a/drivers/power/supply/power_supply_core.c
++++ b/drivers/power/supply/power_supply_core.c
 @@ -21,6 +21,9 @@
  #include <linux/power_supply.h>
  #include <linux/property.h>
