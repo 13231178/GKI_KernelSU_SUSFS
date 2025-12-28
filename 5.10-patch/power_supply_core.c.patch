@@ -11,7 +11,7 @@ index bd49ae732..c74800dba 100644
  #include "power_supply.h"
  
  /* exported for the APM Power driver, APM emulation */
-@@ -87,7 +89,52 @@ static void power_supply_changed_work(struct work_struct *work)
+@@ -87,7 +89,51 @@ static void power_supply_changed_work(struct work_struct *work)
  						changed_work);
  
  	dev_dbg(&psy->dev, "%s\n", __func__);
@@ -48,14 +48,13 @@ index bd49ae732..c74800dba 100644
 +		// 4. 仅匹配 USB/AC/MAINS 通用充电类型（适配所有平台，无硬件依赖）
 +		if (is_charging_online &&
 +		    (psy->desc->type == POWER_SUPPLY_TYPE_USB ||
-+		     psy->desc->type == POWER_SUPPLY_TYPE_AC ||
 +		     psy->desc->type == POWER_SUPPLY_TYPE_MAINS)) {
 +			pr_info("[GKI Charge Auto Power On] Detected %s charger (online: %d)\n", psy_name, prop_val.intval);
 +
 +			// 5. GKI内核安全开机接口（优先用 emergency_restart，全版本兼容）
 +			// 若需关机态触发，将 is_system_running 判断改为 !is_system_running（谨慎使用）
-+			// emergency_restart(NULL); // 通用紧急开机/重启，稳定无风险
-+			kernel_power_on(); // 部分5.10 GKI支持的纯开机接口，若不支持则注释改用上面一行
++			emergency_restart(NULL); // 通用紧急开机/重启，稳定无风险
++			//kernel_power_on(); // 部分5.10 GKI支持的纯开机接口，若不支持则注释改用上面一行
 +		}
 +	}
 +	// ===================== 新增：充电自动开机核心逻辑（结束） =====================
