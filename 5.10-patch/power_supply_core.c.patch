@@ -47,7 +47,6 @@ index bd49ae732..e989b12d7 100644
  	spin_lock_irqsave(&psy->changed_lock, flags);
  	/*
  	 * Check 'changed' here to avoid issues due to race between
-
 --- a/drivers/power/supply/power_supply_core.c
 +++ b/drivers/power/supply/power_supply_core.c
 @@ -21,8 +21,12 @@
