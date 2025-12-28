@@ -1,31 +1,32 @@
-diff --git a/drivers/power/supply/power_supply_core.c b/drivers/power/supply/power_supply_core.c
-index bd49ae732..46c4987fc 100644
---- a/drivers/power/supply/power_supply_core.c
-+++ b/drivers/power/supply/power_supply_core.c
-@@ -21,6 +21,8 @@
+diff --git a/common/drivers/power/supply/power_supply_core.c b/common/drivers/power/supply/power_supply_core.c
+index bd49ae732..c74800dba 100644
+--- a/common/drivers/power/supply/power_supply_core.c
++++ b/common/drivers/power/supply/power_supply_core.c
+@@ -21,6 +21,9 @@
  #include <linux/power_supply.h>
  #include <linux/property.h>
  #include <linux/thermal.h>
++// 先在文件头部添加必要头文件（若已存在可忽略）
 +#include <linux/reboot.h>
 +#include <linux/spinlock.h>
  #include "power_supply.h"
  
  /* exported for the APM Power driver, APM emulation */
-@@ -85,9 +87,52 @@ static void power_supply_changed_work(struct work_struct *work)
+@@ -85,7 +88,61 @@ static void power_supply_changed_work(struct work_struct *work)
  	unsigned long flags;
  	struct power_supply *psy = container_of(work, struct power_supply,
  						changed_work);
-+ 	// 关键修正1：定义共用体变量，匹配 power_supply_get_property 参数类型
-+ 	union power_supply_propval prop_val;
-+ 	enum power_supply_property prop;
-+ 	int ret;
-+ 	bool is_charging_online = false;
-+ 	bool is_system_running = false;
-+ 	enum power_supply_type psy_type;
-+ 	// 新增：定义日志输出用的名称变量，避免直接访问出错
-+ 	const char *psy_name = "unknown";
- 
- 	dev_dbg(&psy->dev, "%s\n", __func__);
++	// 关键修正1：定义共用体变量，匹配 power_supply_get_property 参数类型
++	union power_supply_propval prop_val;
++	enum power_supply_property prop;
++	int ret;
++	bool is_charging_online = false;
++	bool is_system_running = false;
++	enum power_supply_type psy_type;
++	// 新增：定义日志输出用的名称变量，避免直接访问出错
++	const char *psy_name = "unknown";
++
++	dev_dbg(&psy->dev, "%s\n", __func__);
  
 +	// ===================== 修正后：充电自动开机核心逻辑（开始） =====================
 +	// 双重防护：避免 psy 或 psy->desc 为空指针
@@ -68,9 +69,8 @@ index bd49ae732..46c4987fc 100644
 +			}
 +		}
 +	}
-+out: // 异常跳转标签
-+	// ===================== 优化后：充电自动开机核心逻辑（结束） =====================
-+
++out:
++	// ===================== 修正后：充电自动开机核心逻辑（结束） =====================
+ 	dev_dbg(&psy->dev, "%s\n", __func__);
+ 
  	spin_lock_irqsave(&psy->changed_lock, flags);
- 	/*
- 	 * Check 'changed' here to avoid issues due to race between
