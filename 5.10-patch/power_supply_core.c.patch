@@ -47,3 +47,19 @@ index bd49ae732..e989b12d7 100644
  	spin_lock_irqsave(&psy->changed_lock, flags);
  	/*
  	 * Check 'changed' here to avoid issues due to race between
+
+--- a/drivers/power/supply/power_supply_core.c
++++ b/drivers/power/supply/power_supply_core.c
+@@ -21,8 +21,12 @@
+ #include <linux/power_supply.h>
+ #include <linux/property.h>
+ #include <linux/thermal.h>
++// 先在文件头部添加必要头文件（若已存在可忽略）
++#include <linux/reboot.h>
++#include <linux/spinlock.h>
+ #include "power_supply.h"
+ 
++
+ /* exported for the APM Power driver, APM emulation */
+ struct class *power_supply_class;
+ EXPORT_SYMBOL_GPL(power_supply_class);
