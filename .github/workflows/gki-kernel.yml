@@ -389,6 +389,10 @@ jobs:
             cp ../../zzh_patch/5.10-patch/task_mmu.c.patch ./
             patch -p1 < task_mmu.c.patch
             
+            echo "patch -p1 < power_supply_core.c.patch"
+            cp ../../zzh_patch/5.10-patch/power_supply_core.c.patch ./
+            patch -p1 < power_supply_core.c.patch
+            
           fi
       # 步骤2：【关键】启动交互式调试（tmate）
       #- name: 启动交互式连接
