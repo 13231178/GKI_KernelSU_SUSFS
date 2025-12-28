@@ -15,32 +15,42 @@ index bd49ae732..46c4987fc 100644
  	unsigned long flags;
  	struct power_supply *psy = container_of(work, struct power_supply,
  						changed_work);
-+	enum power_supply_property prop;
-+	int ret;
-+	bool is_charging_online = false;
-+	bool is_system_running = false;
-+	enum power_supply_type psy_type; // 新增：单独定义电源类型变量，提升可读性
++ 	// 关键修正1：定义共用体变量，匹配 power_supply_get_property 参数类型
++ 	union power_supply_propval prop_val;
++ 	enum power_supply_property prop;
++ 	int ret;
++ 	bool is_charging_online = false;
++ 	bool is_system_running = false;
++ 	enum power_supply_type psy_type;
++ 	// 新增：定义日志输出用的名称变量，避免直接访问出错
++ 	const char *psy_name = "unknown";
  
  	dev_dbg(&psy->dev, "%s\n", __func__);
  
-+	// ===================== 优化后：充电自动开机核心逻辑（开始） =====================
-+	// 双重防护：先判断 psy 和 psy->desc 不为空，避免空指针异常
++	// ===================== 修正后：充电自动开机核心逻辑（开始） =====================
++	// 双重防护：避免 psy 或 psy->desc 为空指针
 +	if (psy && psy->desc) {
-+		psy_type = psy->desc->type; // 提取电源类型，代码更简洁
-+		// 准确判断 USB 充电（含各类 USB 变体）和 AC 充电（MAINS）
++		// 关键修正3：获取电源名称（从 desc 中读取，而非直接 psy->name）
++		psy_name = psy->desc->name ? psy->desc->name : "unknown";
++		psy_type = psy->desc->type;
++
++		// 匹配 USB 各类充电类型和 AC 充电（MAINS）
 +		if ((psy_type == POWER_SUPPLY_TYPE_USB ||
 +		     psy_type == POWER_SUPPLY_TYPE_USB_DCP ||
 +		     psy_type == POWER_SUPPLY_TYPE_USB_CDP ||
 +		     psy_type == POWER_SUPPLY_TYPE_USB_TYPE_C ||
-+		     psy_type == POWER_SUPPLY_TYPE_MAINS)) { // MAINS 对应 AC 充电
++		     psy_type == POWER_SUPPLY_TYPE_MAINS)) {
 +			prop = POWER_SUPPLY_PROP_ONLINE;
-+			ret = power_supply_get_property(psy, prop, &is_charging_online);
++			// 关键修正2：传入共用体指针，替换 bool 指针，解决类型不兼容
++			ret = power_supply_get_property(psy, prop, &prop_val);
 +			if (ret < 0) {
 +				pr_warn("[Charge Auto Power On] %s: failed to get online status, ret=%d\n",
-+					psy->name ? psy->name : "unknown", // 增加 psy->name 非空判断
-+					ret);
-+				goto out; // 异常时直接跳转，避免无效逻辑
++					psy_name, ret);
++				goto out;
 +			}
++
++			// 关键修正4：从共用体 intval 成员读取值，转换为 bool 类型
++			is_charging_online = (prop_val.intval != 0);
 +
 +			// 判断系统是否处于运行状态（避免重复触发开机）
 +			is_system_running = (system_state == SYSTEM_RUNNING);
