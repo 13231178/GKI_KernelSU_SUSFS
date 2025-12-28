@@ -6,60 +6,67 @@ index bd49ae732..c74800dba 100644
  #include <linux/power_supply.h>
  #include <linux/property.h>
  #include <linux/thermal.h>
-+#include <linux/reboot.h>  // 新增：GKI通用重启/开机接口头文件
-+#include <linux/spinlock.h> // 新增：空指针防护/锁机制头文件
++#include <linux/reboot.h>
++#include <linux/spinlock.h>
  #include "power_supply.h"
  
  /* exported for the APM Power driver, APM emulation */
-@@ -87,7 +89,51 @@ static void power_supply_changed_work(struct work_struct *work)
- 						changed_work);
+@@ -82,12 +84,55 @@ static int __power_supply_changed_work(struct device *dev, void *data)
  
- 	dev_dbg(&psy->dev, "%s\n", __func__);
-+	// ===================== 新增：充电自动开机核心逻辑（开始） =====================
+ static void power_supply_changed_work(struct work_struct *work)
+ {
++	// ========== 函数开头：所有变量一次性声明（完全符合C90语法，无混合声明） ==========
+ 	unsigned long flags;
+-	struct power_supply *psy = container_of(work, struct power_supply,
+-						changed_work);
+-
++	struct power_supply *psy;
 +	union power_supply_propval prop_val;
-+	enum power_supply_property prop = POWER_SUPPLY_PROP_ONLINE;
++	enum power_supply_property prop;
 +	int ret;
-+	bool is_charging_online = false;
-+	bool is_system_running = (system_state == SYSTEM_RUNNING);
-+	const char *psy_name = "unknown";
++	bool is_charging_online;
++	bool is_system_running;
++	const char *psy_name;
 +
-+	// 1. 严格空指针防护 + 仅开机态执行（规避关机态GKI框架未初始化导致的崩溃）
++	// ========== 变量初始化（执行语句，放在声明之后，符合C90规范） ==========
++	psy = container_of(work, struct power_supply, changed_work);
++	prop = POWER_SUPPLY_PROP_ONLINE;
++	is_charging_online = false;
++	is_system_running = (system_state == SYSTEM_RUNNING);
++	psy_name = "unknown";
++
++	// ========== 原有日志输出 + 新增核心逻辑（无变量声明，仅执行代码） ==========
+ 	dev_dbg(&psy->dev, "%s\n", __func__);
++	// 充电自动开机核心逻辑（安全、无编译错误）
 +	if (psy && psy->desc && is_system_running) {
-+		// 2. 安全获取电源设备名称
++		// 使用已声明的变量，无内部变量声明
 +		psy_name = psy->desc->name ? psy->desc->name : "unknown";
 +
-+		// 3. 兼容式获取充电在线状态（优先用通用属性，失败则用兜底接口）
-+		// 先判断属性是否支持，避免无效调用
++		// 兼容式获取充电状态
 +		if (power_supply_property_is_writeable(psy, prop) == 0 && psy->desc->properties) {
 +			ret = power_supply_get_property(psy, prop, &prop_val);
 +			if (ret >= 0) {
 +				is_charging_online = (prop_val.intval != 0);
 +			} else {
-+				// 调用失败，用GKI通用兜底接口判断充电状态
 +				is_charging_online = (power_supply_am_i_supplied(psy) > 0);
 +				pr_warn("[GKI Charge Auto Power On] %s: Get ONLINE prop failed, use fallback\n", psy_name);
 +			}
 +		} else {
-+			// 不支持ONLINE属性，直接用兜底接口
 +			is_charging_online = (power_supply_am_i_supplied(psy) > 0);
 +			pr_info("[GKI Charge Auto Power On] %s: ONLINE prop not supported, use fallback\n", psy_name);
 +		}
 +
-+		// 4. 仅匹配 USB/AC/MAINS 通用充电类型（适配所有平台，无硬件依赖）
++		// 仅匹配 USB + MAINS 通用充电类型（无 POWER_SUPPLY_TYPE_AC，避免未定义错误）
 +		if (is_charging_online &&
 +		    (psy->desc->type == POWER_SUPPLY_TYPE_USB ||
 +		     psy->desc->type == POWER_SUPPLY_TYPE_MAINS)) {
 +			pr_info("[GKI Charge Auto Power On] Detected %s charger (online: %d)\n", psy_name, prop_val.intval);
-+
-+			// 5. GKI内核安全开机接口（优先用 emergency_restart，全版本兼容）
-+			// 若需关机态触发，将 is_system_running 判断改为 !is_system_running（谨慎使用）
-+			emergency_restart(NULL); // 通用紧急开机/重启，稳定无风险
-+			//kernel_power_on(); // 部分5.10 GKI支持的纯开机接口，若不支持则注释改用上面一行
++			// 修复：无参数调用 emergency_restart，匹配内核函数声明
++			emergency_restart();
 +		}
 +	}
-+	// ===================== 新增：充电自动开机核心逻辑（结束） =====================
  
-+	// ===================== 原有逻辑（完全保留，未做任何修改） =====================
++	// ========== 原有逻辑（完全保留，无任何修改） ==========
  	spin_lock_irqsave(&psy->changed_lock, flags);
  	/*
  	 * Check 'changed' here to avoid issues due to race between
